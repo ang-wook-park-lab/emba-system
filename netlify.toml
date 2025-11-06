@@ -1,0 +1,22 @@
+[build]
+  base = "frontend"
+  publish = "frontend/dist"
+  command = "npm install && npm run build"
+
+[build.environment]
+  NODE_VERSION = "18"
+
+# SPA 라우팅 지원 - 모든 경로를 index.html로 리다이렉트
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# API 프록시 (선택사항 - 백엔드가 다른 서버에 있는 경우)
+# 백엔드 URL을 실제 URL로 변경하세요
+# [[redirects]]
+#   from = "/api/*"
+#   to = "https://your-backend.railway.app/api/:splat"
+#   status = 200
+#   force = true
+
