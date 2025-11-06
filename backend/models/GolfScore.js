@@ -131,6 +131,20 @@ class GolfScore {
     } : null
   }
 
+  // 참석자별 평균 스코어 계산 (특정 대회 제외)
+  static getAverageScoreByParticipantExcludingTournament(participantName, excludeTournamentId) {
+    const stmt = db.prepare(`
+      SELECT AVG(score) as averageScore, COUNT(*) as tournamentCount
+      FROM golf_scores
+      WHERE participantName = ? AND tournamentId != ?
+    `)
+    const result = stmt.get(participantName, excludeTournamentId)
+    return result && result.tournamentCount > 0 ? {
+      averageScore: Math.round(result.averageScore * 10) / 10,
+      tournamentCount: result.tournamentCount
+    } : null
+  }
+
   // 모든 참석자별 평균 스코어 조회
   static getAllParticipantAverages() {
     const stmt = db.prepare(`

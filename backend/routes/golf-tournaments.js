@@ -28,9 +28,19 @@ router.get('/:id', authenticate, async (req, res) => {
 
     const scores = GolfScore.findByTournament(id)
     
+    // 각 참석자별 평균 스코어 계산하여 추가 (현재 대회 제외한 과거 누적 평균)
+    const scoresWithAverage = scores.map(score => {
+      const averageData = GolfScore.getAverageScoreByParticipantExcludingTournament(score.participantName, id)
+      // 과거 기록이 없으면 현재 스코어를 표시
+      return {
+        ...score.toJSON(),
+        averageScore: averageData ? averageData.averageScore : score.score
+      }
+    })
+    
     res.json({ 
       tournament: tournament.toJSON(),
-      scores: scores.map(score => score.toJSON())
+      scores: scoresWithAverage
     })
   } catch (error) {
     console.error('골프대회 상세 조회 오류:', error)

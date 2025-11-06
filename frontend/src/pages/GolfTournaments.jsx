@@ -828,6 +828,7 @@ export default function GolfTournaments() {
                         <th className="text-left p-2">순위</th>
                         <th className="text-left p-2">참석자</th>
                         <th className="text-right p-2">스코어</th>
+                        <th className="text-right p-2">평균 스코어</th>
                         <th className="text-right p-2">핸디캡</th>
                         <th className="text-left p-2">비고</th>
                         <th className="text-center p-2">작업</th>
@@ -848,6 +849,9 @@ export default function GolfTournaments() {
                               </button>
                             </td>
                             <td className="p-2 text-right">{score.score}</td>
+                            <td className="p-2 text-right">
+                              {score.averageScore !== undefined ? score.averageScore.toFixed(1) : score.score}
+                            </td>
                             <td className="p-2 text-right">{score.handicap || 0}</td>
                             <td className="p-2 text-sm text-gray-600">{score.notes || '-'}</td>
                             <td className="p-2 text-center">
@@ -879,7 +883,7 @@ export default function GolfTournaments() {
                         ))}
                       {scores.length === 0 && (
                         <tr>
-                          <td colSpan="6" className="text-center text-gray-500 py-8">
+                          <td colSpan="7" className="text-center text-gray-500 py-8">
                             등록된 스코어가 없습니다.
                           </td>
                         </tr>
