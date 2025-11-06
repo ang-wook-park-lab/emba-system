@@ -278,5 +278,10 @@ export function initializeDatabase() {
   console.log('데이터베이스 파일:', dbPath)
 }
 
+// 데이터베이스 인스턴스 반환 함수
+export function getDb() {
+  return db
+}
+
 export default db
 
