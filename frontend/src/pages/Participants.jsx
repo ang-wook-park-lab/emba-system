@@ -245,25 +245,47 @@ export default function Participants() {
 
         // 데이터 검증 및 변환
         const participantsData = jsonData.map((row, index) => {
-          const projectId = parseInt(row['프로젝트ID'])
+          // 프로젝트 ID 검증 (더 엄격하게)
+          const projectIdValue = row['프로젝트ID']
+          let projectId = null
+          
+          // 빈 값 체크
+          if (projectIdValue === undefined || projectIdValue === null || projectIdValue === '') {
+            throw new Error(`${index + 2}번째 행: 프로젝트ID가 비어있습니다.`)
+          }
+          
+          // 문자열인 경우 trim 후 파싱
+          const trimmedValue = String(projectIdValue).trim()
+          projectId = parseInt(trimmedValue)
+          
+          // 숫자로 변환 가능한지 확인
+          if (isNaN(projectId) || trimmedValue === '') {
+            throw new Error(`${index + 2}번째 행: 프로젝트ID가 올바르지 않습니다. (입력된 값: "${projectIdValue}")`)
+          }
+          
+          // 실제 프로젝트가 존재하는지 확인
+          const projectExists = projects.find(p => p.id === projectId)
+          if (!projectExists) {
+            throw new Error(`${index + 2}번째 행: 프로젝트ID ${projectId}는 존재하지 않는 프로젝트입니다. 사용 가능한 프로젝트 ID: ${projects.map(p => p.id).join(', ')}`)
+          }
+          
           const category = getCategoryId(row['구분'])
           const name = row['이름']
           
-          // 필수 필드 검증
-          if (!projectId || isNaN(projectId)) {
-            throw new Error(`${index + 2}번째 행: 프로젝트ID가 올바르지 않습니다.`)
-          }
+          // 구분 검증
           if (!category) {
             throw new Error(`${index + 2}번째 행: 구분이 올바르지 않습니다. (교수님, VIP, 외부초청, 동문회, 재학생, 기타 중 선택)`)
           }
-          if (!name || name.trim() === '') {
+          
+          // 이름 검증
+          if (!name || String(name).trim() === '') {
             throw new Error(`${index + 2}번째 행: 이름이 필요합니다.`)
           }
           
         return {
           projectId: projectId,
           category: category,
-          name: name.trim(),
+          name: String(name).trim(),
           phone: row['전화번호'] ? String(row['전화번호']).trim() : null,
           grade: row['기수'] ? String(row['기수']).trim() : null,
           position: row['직책'] ? String(row['직책']).trim() : null,
