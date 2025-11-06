@@ -46,10 +46,15 @@ export default function GolfTournaments() {
     handicap: '',
     notes: ''
   })
+  const [participantList, setParticipantList] = useState([])
+  const [filteredParticipants, setFilteredParticipants] = useState([])
+  const [showParticipantDropdown, setShowParticipantDropdown] = useState(false)
+  const [showEditParticipantDropdown, setShowEditParticipantDropdown] = useState(false)
 
   useEffect(() => {
     fetchTournaments()
     fetchParticipantStats()
+    fetchParticipantList()
   }, [])
 
   useEffect(() => {
@@ -78,6 +83,15 @@ export default function GolfTournaments() {
       console.error('골프대회 조회 실패:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const fetchParticipantList = async () => {
+    try {
+      const response = await api.get('/participants')
+      setParticipantList(response.data.participants || [])
+    } catch (error) {
+      console.error('참석자 목록 조회 실패:', error)
     }
   }
 
@@ -215,6 +229,30 @@ export default function GolfTournaments() {
   const handleParticipantClick = async (participantName) => {
     setSelectedParticipant(participantName)
     await fetchParticipantScores(participantName)
+  }
+
+  const handleParticipantSearch = (value, isEdit = false) => {
+    const searchValue = value.toLowerCase()
+    const filtered = participantList.filter(p => 
+      p.name.toLowerCase().includes(searchValue)
+    )
+    setFilteredParticipants(filtered)
+    
+    if (isEdit) {
+      setShowEditParticipantDropdown(filtered.length > 0 && value.length > 0)
+    } else {
+      setShowParticipantDropdown(filtered.length > 0 && value.length > 0)
+    }
+  }
+
+  const selectParticipant = (participantName, isEdit = false) => {
+    if (isEdit) {
+      setEditScore({ ...editScore, participantName })
+      setShowEditParticipantDropdown(false)
+    } else {
+      setNewScore({ ...newScore, participantName })
+      setShowParticipantDropdown(false)
+    }
   }
 
   const handleExcelUpload = async (e) => {
@@ -1113,15 +1151,41 @@ export default function GolfTournaments() {
             <h2 className="text-2xl font-bold mb-4">스코어 추가</h2>
             <form onSubmit={handleAddScore}>
               <div className="space-y-4">
-                <div>
+                <div className="relative">
                   <label className="block text-sm font-medium mb-1">참석자명 *</label>
                   <input
                     type="text"
                     required
                     className="w-full px-3 py-2 border rounded-lg"
                     value={newScore.participantName}
-                    onChange={(e) => setNewScore({ ...newScore, participantName: e.target.value })}
+                    onChange={(e) => {
+                      setNewScore({ ...newScore, participantName: e.target.value })
+                      handleParticipantSearch(e.target.value, false)
+                    }}
+                    onFocus={(e) => handleParticipantSearch(e.target.value, false)}
+                    placeholder="참석자 이름을 입력하세요"
                   />
+                  {showParticipantDropdown && (
+                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                      {filteredParticipants.length > 0 ? (
+                        filteredParticipants.map((participant) => (
+                          <button
+                            key={participant.id}
+                            type="button"
+                            onClick={() => selectParticipant(participant.name, false)}
+                            className="w-full text-left px-4 py-2 hover:bg-gray-100 transition-colors"
+                          >
+                            <div className="font-medium">{participant.name}</div>
+                            {participant.affiliation && (
+                              <div className="text-sm text-gray-500">{participant.affiliation}</div>
+                            )}
+                          </button>
+                        ))
+                      ) : (
+                        <div className="px-4 py-2 text-gray-500">검색 결과가 없습니다</div>
+                      )}
+                    </div>
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1">스코어 *</label>
@@ -1179,15 +1243,41 @@ export default function GolfTournaments() {
             <h2 className="text-2xl font-bold mb-4">스코어 수정</h2>
             <form onSubmit={handleUpdateScore}>
               <div className="space-y-4">
-                <div>
+                <div className="relative">
                   <label className="block text-sm font-medium mb-1">참석자명 *</label>
                   <input
                     type="text"
                     required
                     className="w-full px-3 py-2 border rounded-lg"
                     value={editScore.participantName}
-                    onChange={(e) => setEditScore({ ...editScore, participantName: e.target.value })}
+                    onChange={(e) => {
+                      setEditScore({ ...editScore, participantName: e.target.value })
+                      handleParticipantSearch(e.target.value, true)
+                    }}
+                    onFocus={(e) => handleParticipantSearch(e.target.value, true)}
+                    placeholder="참석자 이름을 입력하세요"
                   />
+                  {showEditParticipantDropdown && (
+                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                      {filteredParticipants.length > 0 ? (
+                        filteredParticipants.map((participant) => (
+                          <button
+                            key={participant.id}
+                            type="button"
+                            onClick={() => selectParticipant(participant.name, true)}
+                            className="w-full text-left px-4 py-2 hover:bg-gray-100 transition-colors"
+                          >
+                            <div className="font-medium">{participant.name}</div>
+                            {participant.affiliation && (
+                              <div className="text-sm text-gray-500">{participant.affiliation}</div>
+                            )}
+                          </button>
+                        ))
+                      ) : (
+                        <div className="px-4 py-2 text-gray-500">검색 결과가 없습니다</div>
+                      )}
+                    </div>
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1">스코어 *</label>
